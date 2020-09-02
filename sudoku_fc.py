@@ -48,7 +48,7 @@ def find_empty_location(arr, l):
                 return True
     return False
 
-def find_next_cell(arr, cell_varables, l):
+def find_next_cell(arr, cell_variables, l):
     if len(cell_variables) == 0:
         return False
 
@@ -58,8 +58,8 @@ def find_next_cell(arr, cell_varables, l):
         if len(cell_variables[k]) < min_values:
             min_values = len(cell_variables[k])
             key = k
-    l[0] = k[0]
-    l[1] = k[1]
+    l[0] = key[0]
+    l[1] = key[1]
     return True
 
 # Returns a boolean which indicates whether any assigned entry 
@@ -100,7 +100,7 @@ def check_location_is_safe(arr, row, col, num):
 # all unassigned locations in such a way to meet the requirements 
 # for Sudoku solution (non-duplication across rows, columns, and boxes) 
 def solve_sudoku(arr, cell_variables): 
-    global count
+    
     # 'l' is a list variable that keeps the record of row and col in find_empty_location Function     
     l =[0, 0] 
       
@@ -110,21 +110,24 @@ def solve_sudoku(arr, cell_variables):
 
     if(not find_next_cell(arr, cell_variables, l)):
         return True
-      
+    if len(cell_variables) == 0:
+        return False
     # Assigning list values to row and col that we got from the above Function  
     row = l[0] 
     col = l[1] 
 
     for num in cell_variables[(row, col)]:
         arr[row][col] = num
-        new_cell_variables = cell_variables
+        #new_cell_variables = cell_variables
+        new_cell_variables = cell_variables.copy()
         del new_cell_variables[(row, col)]
-        propagate_consraint(arr, new_cell_variables)
-
-        if solve_sudoku(arr, new_cell_variables) == True:
-            return True
+        
+        if propagate_consraints(arr, new_cell_variables) == True:
+            if solve_sudoku(arr, new_cell_variables) == True:
+                return True
 
         arr[row][col] = 0
+    '''
     # consider digits 1 to 9 
     for num in range(1, 10): 
           
@@ -144,8 +147,8 @@ def solve_sudoku(arr, cell_variables):
 
             # failure, unmake & try again 
             arr[row][col] = 0
-              
-    # this triggers backtracking         
+    '''
+    # this triggers backtracking
     return False
 
 def init_constraint_vars(arr):
@@ -158,18 +161,20 @@ def init_constraint_vars(arr):
 
 def propagate_consraints(arr, cell_variables):
     #return not used_in_row(arr, row, num) and not used_in_col(arr, col, num) and not used_in_box(arr, row - row % 3, col - col % 3, num) 
-    for k in cell_variables.keys():
+    #for k in cell_variables.keys():
+    for k in list(cell_variables):  # iterate through empty grid positions
         valid_nums = []
-        for num in cell_variables.get(k):
+        for num in cell_variables.get(k):  # iterate through remaining valid numbers for this array cell
             if not used_in_row(arr, k[0], num) and not used_in_col(arr, k[1], num) and not used_in_box(arr, k[0] - k[0] % 3, k[1] - k[1] % 3, num):
                 valid_nums.append(num)
         if len(valid_nums) == 0:
-            del cell_variables[k]
+            #del cell_variables[k]
+            return False
         else:
             cell_variables[k] = valid_nums  ## update valid numbers for that cell
-    
-    for i in cell_variables.items():
-        print(i[0], "  --  ", i[1])
+    #print(" - - - - - - - - - - \n")
+    #for i in cell_variables.items():
+    #    print(i[0], "  --  ", i[1])
     return True
 
         
@@ -208,7 +213,7 @@ if __name__=="__main__":
     cell_variables = init_constraint_vars(grid)
     propagate_consraints(grid, cell_variables)
 
-
+    start_t = time.time()
     # if success print the grid 
     if(solve_sudoku(grid, cell_variables)): 
         #print_grid(grid)
@@ -216,5 +221,6 @@ if __name__=="__main__":
         print_grid_table(grid) 
     else: 
         print("No solution exists")
-  
+    end_t = time.time()
+    print("Solution found in : {0:.4f} sec".format(end_t - start_t))
 # The above code has been contributed by Harshit Sidhwa. 
